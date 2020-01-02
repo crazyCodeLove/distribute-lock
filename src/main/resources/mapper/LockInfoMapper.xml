@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.huitong.app.dao.mapper.LockInfoMapperper">
+
+    <sql id="Base_Column_List">
+        `id`,  `number`,  `ip`,
+    </sql>
+
+    <insert id="addLockInfo" parameterType="com.huitong.app.model.DisLockInfo">
+    INSERT INTO `lock_info`
+    (
+        `number`,
+        `ip`
+    )
+    VALUES
+    (
+        #{number, jdbcType=INTEGER},
+        #{ip, jdbcType=VARCHAR}
+    )
+    </insert>
+
+    <select id="queryRecordCount" resultType="java.lang.Long">
+    SELECT
+        COUNT(0)
+    FROM lock_info
+    </select>
+
+</mapper>
