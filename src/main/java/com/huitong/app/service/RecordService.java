@@ -30,15 +30,16 @@ public class RecordService extends AbstractDistributeLock {
 
     private static final String RECORD_UPDATE_LOCK_KEY = "sse:spcg:distribute:lock:record";
 
-    @Autowired
     private LockInfoMapper lockInfoMapper;
 
     private Random random = new Random();
-    private ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private ExecutorService executorService = Executors.newFixedThreadPool(3);
 
     @Autowired
-    public RecordService(LockConfig lockConfig) {
+    public RecordService(LockConfig lockConfig,
+                         LockInfoMapper lockInfoMapper) {
         this.lockConfig = lockConfig;
+        this.lockInfoMapper = lockInfoMapper;
         super.initDistributeLock(lockConfig.getRedisIp(), lockConfig.getRedisPort(), lockConfig.getDatabase(), lockConfig.getPassword());
     }
 
@@ -54,7 +55,7 @@ public class RecordService extends AbstractDistributeLock {
         try {
             Thread.sleep(30000 + random.nextInt(5000));
         } catch (InterruptedException e) {
-            log.info("thread InterruptedException", e.getMessage());
+            log.info("thread InterruptedException. " + e.getMessage());
         }
     }
 
@@ -62,9 +63,9 @@ public class RecordService extends AbstractDistributeLock {
      * 使用异步防止执行阻塞
      */
     @Scheduled(cron = "0 0/1 * * * ?")
-    public void schedulrTask() {
+    public void scheduleTask() {
         executorService.submit(() -> {
-            super.onlyOneExecute(RECORD_UPDATE_LOCK_KEY, UUID.randomUUID().toString(), lockConfig.getRedisExpireTime());
+            super.onlyOneNodeExecute(RECORD_UPDATE_LOCK_KEY, UUID.randomUUID().toString(), lockConfig.getRedisExpireTime());
         });
     }
 

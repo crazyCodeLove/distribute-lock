@@ -49,13 +49,14 @@ public abstract class AbstractDistributeLock {
     public abstract void taskService() throws RTException;
 
     /**
-     * 只有获得锁的节点执行 taskService
+     * 任一执行，ANY OF
+     * 所有节点任意一个执行任务 taskService 即可，没有获得锁的节点不执行任务
      *
      * @param lockKey    lockKey
      * @param keyValue   keyValue
      * @param expireTime 过期时间 ms
      */
-    public void onlyOneExecute(String lockKey, String keyValue, int expireTime) {
+    public void onlyOneNodeExecute(String lockKey, String keyValue, int expireTime) {
         boolean getLock = false;
         try {
             if ((getLock = tryGetDistributedLock(jedis, lockKey, keyValue, expireTime))) {
@@ -65,6 +66,29 @@ public abstract class AbstractDistributeLock {
             if (getLock) {
                 releaseDistributedLock(jedis, lockKey, keyValue);
             }
+        }
+    }
+
+    /**
+     * 所有串行执行，ALL IN LINE
+     * 所有节点都必须执行该任务，每次只能一个执行。
+     *
+     * @param lockKey    lockKey
+     * @param keyValue   keyValue
+     * @param expireTime 过期时间 ms
+     */
+    public void allNodeExecute(String lockKey, String keyValue, int expireTime) {
+        try {
+            while (!(tryGetDistributedLock(jedis, lockKey, keyValue, expireTime))) {
+                try {
+                    Thread.sleep(200);
+                } catch (InterruptedException e) {
+                    log.info(e.getMessage());
+                }
+            }
+            taskService();
+        } finally {
+            releaseDistributedLock(jedis, lockKey, keyValue);
         }
     }
 
