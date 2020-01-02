@@ -12,8 +12,8 @@ import java.util.Collections;
  * 单台 REDIS 中使用，非严格意义的分布式锁。 <br/>
  * 1） 执行时间超过设置的过期时间，会有多个获得锁 <br/>
  * 2） 一台获得锁的机器，执行了一次 FULL GC，超过有效时间，redis中的锁释放了，可能造成多个获得锁。 <br/>
- * 3） redis 获取锁失败不影响业务
- * 4） redis 宕机不影响业务
+ * 3） redis 获取锁失败，全部没有执行
+ * 4） redis 宕机，后续全部没有执行
  * </p>
  * author pczhao<br/>
  * date  2019-07-04 10:56
