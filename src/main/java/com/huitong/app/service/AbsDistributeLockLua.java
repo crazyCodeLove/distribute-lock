@@ -89,7 +89,7 @@ public abstract class AbsDistributeLockLua {
         try {
             Object result = redisTemplate.execute(redisScript, redisTemplate.getStringSerializer(), redisTemplate.getStringSerializer(), Collections.singletonList(key), value, expire);
             System.out.println("redis返回：" + result);
-            return "1".equals("" + result);
+            return "1".equals(result);
         } catch (Exception e) {
             //可以自己做异常处理
             return false;
@@ -110,7 +110,7 @@ public abstract class AbsDistributeLockLua {
         redisScript.setScriptText(strScript);
         try {
             Object result = redisTemplate.execute(redisScript, redisTemplate.getStringSerializer(), redisTemplate.getStringSerializer(), Collections.singletonList(key), value);
-            return "1".equals("" + result);
+            return "1".equals(result);
         } catch (Exception e) {
             //可以自己做异常处理
             return false;
