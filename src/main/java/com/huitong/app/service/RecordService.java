@@ -24,7 +24,7 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
-public class RecordService extends AbstractDistributeLock {
+public class RecordService extends AbsDistributeLock {
 
     private LockConfig lockConfig;
 

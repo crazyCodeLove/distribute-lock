@@ -20,7 +20,7 @@ import java.util.Collections;
  */
 
 @Slf4j
-public abstract class AbstractDistributeLock {
+public abstract class AbsDistributeLock {
 
     private Jedis jedis;
 
@@ -59,7 +59,7 @@ public abstract class AbstractDistributeLock {
     public void onlyOneNodeExecute(String lockKey, String keyValue, int expireTime) {
         boolean getLock = false;
         try {
-            if ((getLock = tryGetDistributedLock(jedis, lockKey, keyValue, expireTime))) {
+            if ((getLock = getDistributedLock(jedis, lockKey, keyValue, expireTime))) {
                 taskService();
             }
         } finally {
@@ -79,7 +79,7 @@ public abstract class AbstractDistributeLock {
      */
     public void allNodeExecute(String lockKey, String keyValue, int expireTime) {
         try {
-            while (!(tryGetDistributedLock(jedis, lockKey, keyValue, expireTime))) {
+            while (!(getDistributedLock(jedis, lockKey, keyValue, expireTime))) {
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
@@ -98,7 +98,7 @@ public abstract class AbstractDistributeLock {
      * @param keyValue   key值
      * @param expireTime 过期时间，ms
      */
-    public static boolean tryGetDistributedLock(Jedis jedis, String lockKey, String keyValue, int expireTime) {
+    public static boolean getDistributedLock(Jedis jedis, String lockKey, String keyValue, int expireTime) {
         String result = jedis.set(lockKey, keyValue, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, expireTime);
         if (LOCK_SUCCESS.equals(result)) {
             log.info("ip:[{}] get lock:[{}], value:[{}], getLock result:[{}]", IpUtil.getLocalIpAddr(), lockKey, keyValue, result);
