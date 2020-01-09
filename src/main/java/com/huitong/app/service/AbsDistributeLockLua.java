@@ -1,6 +1,7 @@
 package com.huitong.app.service;
 
 import com.huitong.app.exception.RTException;
+import com.huitong.app.util.IpUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
@@ -82,16 +83,17 @@ public abstract class AbsDistributeLockLua {
      * @return true：加锁成功，false：加锁失败
      */
     public boolean getDistributeLock(RedisTemplate<String, String> redisTemplate, String key, String value, int expire) {
-        DefaultRedisScript<String> redisScript = new DefaultRedisScript<String>();
-        redisScript.setResultType(String.class);
         String strScript = "if redis.call('setNx',KEYS[1],ARGV[1])==1 then return redis.call('pexpire',KEYS[1],ARGV[2]) else return 0 end";
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setResultType(Long.class);
         redisScript.setScriptText(strScript);
         try {
-            Object result = redisTemplate.execute(redisScript, redisTemplate.getStringSerializer(), redisTemplate.getStringSerializer(), Collections.singletonList(key), value, expire);
-            System.out.println("redis返回：" + result);
-            return "1".equals(result);
+            Long result = redisTemplate.execute(redisScript, Collections.singletonList(key), value, expire);
+            log.info("ip:[{}] get lock:[{}], value:[{}], getLock result:[{}]", IpUtil.getLocalIpAddr(), key, value, result);
+            return result != null && result == 1;
         } catch (Exception e) {
             //可以自己做异常处理
+            log.error(e.getMessage(), e);
             return false;
         }
     }
@@ -104,15 +106,17 @@ public abstract class AbsDistributeLockLua {
      * @return true：释放锁成功，false：释放锁失败（可能已过期或者已被释放）
      */
     public boolean releaseDistributeLock(RedisTemplate<String, String> redisTemplate, String key, String value) {
-        DefaultRedisScript<String> redisScript = new DefaultRedisScript<>();
-        redisScript.setResultType(String.class);
         String strScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
+        redisScript.setResultType(Long.class);
         redisScript.setScriptText(strScript);
         try {
-            Object result = redisTemplate.execute(redisScript, redisTemplate.getStringSerializer(), redisTemplate.getStringSerializer(), Collections.singletonList(key), value);
-            return "1".equals(result);
+            Long result = redisTemplate.execute(redisScript, Collections.singletonList(key), value);
+            log.info("ip:[{}] release lock:[{}], value:[{}], release result: [{}]", IpUtil.getLocalIpAddr(), key, value, result);
+            return result != null && result == 1;
         } catch (Exception e) {
             //可以自己做异常处理
+            log.error(e.getMessage(), e);
             return false;
         }
     }
